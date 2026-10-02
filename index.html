@@ -19,7 +19,7 @@
             const formData = new FormData(e.target);
             
             // Replace with your Cloudflare Worker URL
-            const workerUrl = 'https://your-worker-name.your-subdomain.workers.dev';
+            const workerUrl = 'https://chat.tomtomsugden.workers.dev';
             
             try {
                 const res = await fetch(workerUrl, { method: 'POST', body: formData });
