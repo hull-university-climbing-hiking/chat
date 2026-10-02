@@ -1,0 +1,28 @@
+export default {
+  async fetch(request, env) {
+    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+    
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+    
+    const formData = await request.formData();
+    const token = formData.get('cf-turnstile-response');
+
+    // Verify token with Cloudflare
+    const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: \secret=${env.TURNSTILE_SECRET}&response=${token}``
+    });
+
+    const result = await verify.json();
+    
+    // Send the WhatsApp link only if human
+    if (result.success) {
+      return new Response(JSON.stringify({ url: env.WA_LINK }), { 
+        headers: { ...cors, 'Content-Type': 'application/json' } 
+      });
+    }
+    return new Response('Bot blocked', { status: 403, headers: cors });
+  }
+};
