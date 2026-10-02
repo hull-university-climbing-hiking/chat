@@ -1,28 +1,38 @@
-export default {
-  async fetch(request, env) {
-    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
-    
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
-    
-    const formData = await request.formData();
-    const token = formData.get('cf-turnstile-response');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>Join WhatsApp Group</title>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
 
-    // Verify token with Cloudflare
-    const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: \secret=${env.TURNSTILE_SECRET}&response=${token}``
-    });
+    <form id="wa-form">
+        <!-- Your Site Key is here -->
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAAFMLEPy5oa3unrnF"></div>
+        <button type="submit">Join Group,</button>
+    </form>
 
-    const result = await verify.json();
-    
-    // Send the WhatsApp link only if human
-    if (result.success) {
-      return new Response(JSON.stringify({ url: env.WA_LINK }), { 
-        headers: { ...cors, 'Content-Type': 'application/json' } 
-      });
-    }
-    return new Response('Bot blocked', { status: 403, headers: cors });
-  }
-};
+    <script>
+        document.getElementById('wa-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            // Replace with your Cloudflare Worker URL
+            const workerUrl = 'https://your-worker-name.your-subdomain.workers.dev';
+            
+            try {
+                const res = await fetch(workerUrl, { method: 'POST', body: formData });
+                if (res.ok) {
+                    const data = await res.json();
+                    window.location.href = data.url; 
+                } else {
+                    alert('Verification failed. Are you a bot?');
+                }
+            } catch (error) {
+                console.error('Error connecting to verification server.');
+            }
+        });
+    </script>
+</body>
+</html>
